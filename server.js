@@ -3,10 +3,18 @@ const fs = require('fs');
 const path = require('path');
 const url = require('url');
 
+const BASE = (process.env.BASE_PATH || '').replace(/\/$/, '');
+
 let nextId = 1;
 const queue = [];
 const history = [];
 const clients = [];
+
+function stripBase(p) {
+  if (!BASE || p === BASE) return '/';
+  if (BASE && p.startsWith(BASE + '/')) return p.slice(BASE.length);
+  return p;
+}
 
 function computeStats() {
   const today = new Date();
@@ -26,8 +34,8 @@ function sendUpdate() {
   sendEvent({ type: 'update', queue, stats: computeStats() });
 }
 
-function serveStatic(req, res) {
-  let file = req.url === '/' ? 'index.html' : req.url.replace(/^\/+/, '');
+function serveStatic(pathname, res) {
+  let file = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
   if (!path.extname(file)) file += '.html';
   const filePath = path.join(__dirname, 'public', file);
   fs.readFile(filePath, (err, content) => {
@@ -116,12 +124,13 @@ function handleSSE(req, res) {
 
 const server = http.createServer((req, res) => {
   const parsed = url.parse(req.url, true);
-  if (req.method === 'POST' && parsed.pathname === '/register') return handleRegister(req, res);
-  if (req.method === 'POST' && parsed.pathname === '/next') return handleNext(req, res);
-  if (req.method === 'POST' && parsed.pathname === '/done') return handleDone(req, res);
-  if (req.method === 'GET' && parsed.pathname === '/events') return handleSSE(req, res);
-  serveStatic(req, res);
+  const pathname = stripBase(parsed.pathname);
+  if (req.method === 'POST' && pathname === '/register') return handleRegister(req, res);
+  if (req.method === 'POST' && pathname === '/next') return handleNext(req, res);
+  if (req.method === 'POST' && pathname === '/done') return handleDone(req, res);
+  if (req.method === 'GET' && pathname === '/events') return handleSSE(req, res);
+  serveStatic(pathname, res);
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Server running on ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on ${PORT}${BASE || ''}`));

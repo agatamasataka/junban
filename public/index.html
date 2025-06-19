@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>受付</title>
+  <base href="./">
   <style>
     body { font-family: sans-serif; }
     form { margin-bottom: 1em; }
@@ -33,7 +34,7 @@
       e.preventDefault();
       const mode = document.querySelector('input[name="mode"]:checked').value;
       const name = mode === 'name' ? nameInput.value : '';
-      const res = await fetch('/register', {
+      const res = await fetch('register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })
@@ -43,7 +44,7 @@
       form.reset();
       nameInput.style.display = 'none';
     });
-    const es = new EventSource('/events');
+    const es = new EventSource('events');
     es.onmessage = e => {
       const data = JSON.parse(e.data);
       if (data.type === 'update') {

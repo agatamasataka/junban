@@ -8,9 +8,12 @@
 node server.js
 ```
 
-環境変数 `PORT` を指定するとポート番号を変更できます。
+環境変数 `PORT` を指定するとポート番号を変更できます。また、`BASE_PATH` を指定
+すると API や静的ファイルをそのパス配下で提供します。GitHub Pages で公開する場
+合は `/junban` を指定してください。
 
 `http://localhost:3000/` が受付画面、`/admin` (または `/admin.html`) が管理画面です。
+GitHub Pages のデモ: <https://agatamasataka.github.io/junban/>
 受付画面では匿名か名前ありを選択して順番を取れます。管理画面では待ち・呼出中・完了の
 フィルタ表示、呼出、消し込み、本日受付数と平均待ち時間の表示を行います。
 

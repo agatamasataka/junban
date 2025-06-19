@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>管理画面</title>
+  <base href="./">
   <style>
     body { font-family: sans-serif; }
     table { border-collapse: collapse; width: 100%; }
@@ -29,7 +30,7 @@
   <script>
     const list = document.getElementById('list');
     document.getElementById('nextBtn').addEventListener('click', () => {
-      fetch('/next', { method: 'POST' });
+      fetch('next', { method: 'POST' });
     });
     const filterSel = document.getElementById('filter');
     const statsDiv = document.getElementById('stats');
@@ -46,14 +47,14 @@
     }
     list.addEventListener('click', e => {
       if (e.target.tagName === 'BUTTON') {
-        fetch('/done', {
+        fetch('done', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: Number(e.target.dataset.id) })
         });
       }
     });
-    const es = new EventSource('/events');
+    const es = new EventSource('events');
     es.onmessage = e => {
       const data = JSON.parse(e.data);
       if (data.type === 'update') render(data.queue, data.stats);
