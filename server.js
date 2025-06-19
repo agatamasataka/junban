@@ -27,7 +27,9 @@ function sendUpdate() {
 }
 
 function serveStatic(req, res) {
-  let filePath = path.join(__dirname, 'public', req.url === '/' ? 'index.html' : req.url);
+  let file = req.url === '/' ? 'index.html' : req.url.replace(/^\/+/, '');
+  if (!path.extname(file)) file += '.html';
+  const filePath = path.join(__dirname, 'public', file);
   fs.readFile(filePath, (err, content) => {
     if (err) {
       res.writeHead(404);
@@ -35,7 +37,7 @@ function serveStatic(req, res) {
     } else {
       const ext = path.extname(filePath).toLowerCase();
       const type = ext === '.js' ? 'text/javascript' : 'text/html';
-      res.writeHead(200, {'Content-Type': type});
+      res.writeHead(200, { 'Content-Type': type });
       res.end(content);
     }
   });
