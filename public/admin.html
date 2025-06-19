@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理画面</title>
+  <style>
+    body { font-family: sans-serif; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 4px; }
+  </style>
+</head>
+<body>
+  <h1>管理画面</h1>
+  <button id="nextBtn">次を呼ぶ</button>
+  <table>
+    <thead><tr><th>ID</th><th>名前</th><th>状態</th><th>完了</th></tr></thead>
+    <tbody id="list"></tbody>
+  </table>
+  <script>
+    const list = document.getElementById('list');
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      fetch('/next', { method: 'POST' });
+    });
+    function render(queue) {
+      list.innerHTML = '';
+      queue.forEach(q => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${q.id}</td><td>${q.name}</td><td>${q.status}</td><td><button data-id="${q.id}">完了</button></td>`;
+        list.appendChild(tr);
+      });
+    }
+    list.addEventListener('click', e => {
+      if (e.target.tagName === 'BUTTON') {
+        fetch('/done', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: Number(e.target.dataset.id) })
+        });
+      }
+    });
+    const es = new EventSource('/events');
+    es.onmessage = e => {
+      const data = JSON.parse(e.data);
+      if (data.type === 'update') render(data.queue);
+    };
+  </script>
+</body>
+</html>
