@@ -43,17 +43,31 @@ function serveStatic(req, res) {
   });
 }
 
-function handleRegister(req, res) {
-  let body = '';
-  req.on('data', chunk => body += chunk);
-  req.on('end', () => {
-    const { name } = JSON.parse(body);
-    const entry = { id: nextId++, name: name || '匿名', status: 'waiting', createdAt: Date.now() };
-    queue.push(entry);
-    sendUpdate();
-    res.writeHead(200, {'Content-Type': 'application/json'});
-    res.end(JSON.stringify(entry));
+async function parseBody(req) {
+  return new Promise(resolve => {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        resolve(JSON.parse(body || '{}'));
+      } catch {
+        resolve(null);
+      }
+    });
   });
+}
+
+async function handleRegister(req, res) {
+  const data = await parseBody(req);
+  if (!data) {
+    res.writeHead(400);
+    return res.end('Invalid JSON');
+  }
+  const entry = { id: nextId++, name: data.name || '匿名', status: 'waiting', createdAt: Date.now() };
+  queue.push(entry);
+  sendUpdate();
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(entry));
 }
 
 function handleNext(req, res) {
@@ -67,22 +81,22 @@ function handleNext(req, res) {
   res.end();
 }
 
-function handleDone(req, res) {
-  let body = '';
-  req.on('data', chunk => body += chunk);
-  req.on('end', () => {
-    const { id } = JSON.parse(body);
-    const idx = queue.findIndex(q => q.id === id);
-    if (idx !== -1) {
-      const [entry] = queue.splice(idx, 1);
-      entry.status = 'done';
-      entry.finishedAt = Date.now();
-      history.push(entry);
-    }
-    sendUpdate();
-    res.writeHead(200);
-    res.end();
-  });
+async function handleDone(req, res) {
+  const data = await parseBody(req);
+  if (!data || typeof data.id !== 'number') {
+    res.writeHead(400);
+    return res.end('Invalid JSON');
+  }
+  const idx = queue.findIndex(q => q.id === data.id);
+  if (idx !== -1) {
+    const [entry] = queue.splice(idx, 1);
+    entry.status = 'done';
+    entry.finishedAt = Date.now();
+    history.push(entry);
+  }
+  sendUpdate();
+  res.writeHead(200);
+  res.end();
 }
 
 function handleSSE(req, res) {
