@@ -13,6 +13,15 @@
 <body>
   <h1>管理画面</h1>
   <button id="nextBtn">次を呼ぶ</button>
+  <label>表示:
+    <select id="filter">
+      <option value="all">全て</option>
+      <option value="waiting">待ち</option>
+      <option value="calling">呼出中</option>
+      <option value="done">完了</option>
+    </select>
+  </label>
+  <div id="stats"></div>
   <table>
     <thead><tr><th>ID</th><th>名前</th><th>状態</th><th>完了</th></tr></thead>
     <tbody id="list"></tbody>
@@ -22,13 +31,18 @@
     document.getElementById('nextBtn').addEventListener('click', () => {
       fetch('/next', { method: 'POST' });
     });
-    function render(queue) {
+    const filterSel = document.getElementById('filter');
+    const statsDiv = document.getElementById('stats');
+    function render(queue, stats) {
       list.innerHTML = '';
+      const filter = filterSel.value;
       queue.forEach(q => {
+        if (filter !== 'all' && q.status !== filter) return;
         const tr = document.createElement('tr');
         tr.innerHTML = `<td>${q.id}</td><td>${q.name}</td><td>${q.status}</td><td><button data-id="${q.id}">完了</button></td>`;
         list.appendChild(tr);
       });
+      statsDiv.textContent = `本日受付数: ${stats.total} / 平均待ち時間: ${stats.avgWait}分`;
     }
     list.addEventListener('click', e => {
       if (e.target.tagName === 'BUTTON') {
@@ -42,7 +56,7 @@
     const es = new EventSource('/events');
     es.onmessage = e => {
       const data = JSON.parse(e.data);
-      if (data.type === 'update') render(data.queue);
+      if (data.type === 'update') render(data.queue, data.stats);
     };
   </script>
 </body>

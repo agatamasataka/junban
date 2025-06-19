@@ -12,7 +12,9 @@
 <body>
   <h1>受付</h1>
   <form id="regForm">
-    <label>名前（任意）:<input type="text" id="name"></label>
+    <label><input type="radio" name="mode" value="anon" checked>匿名</label>
+    <label><input type="radio" name="mode" value="name">名前あり</label>
+    <input type="text" id="name" style="display:none" placeholder="名前">
     <button type="submit">受付</button>
   </form>
   <div id="result"></div>
@@ -21,9 +23,16 @@
     const form = document.getElementById('regForm');
     const result = document.getElementById('result');
     const info = document.getElementById('info');
+    const nameInput = document.getElementById('name');
+    document.querySelectorAll('input[name="mode"]').forEach(el => {
+      el.addEventListener('change', () => {
+        nameInput.style.display = document.querySelector('input[name="mode"]:checked').value === 'name' ? 'inline' : 'none';
+      });
+    });
     form.addEventListener('submit', async e => {
       e.preventDefault();
-      const name = document.getElementById('name').value;
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+      const name = mode === 'name' ? nameInput.value : '';
       const res = await fetch('/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -32,13 +41,14 @@
       const data = await res.json();
       result.textContent = `受付番号: ${data.id}`;
       form.reset();
+      nameInput.style.display = 'none';
     });
     const es = new EventSource('/events');
     es.onmessage = e => {
       const data = JSON.parse(e.data);
       if (data.type === 'update') {
         const waiting = data.queue.filter(q => q.status === 'waiting').length;
-        info.textContent = `待ち人数: ${waiting}`;
+        info.textContent = `待ち人数: ${waiting} / 目安 ${data.stats.avgWait}分`;
       }
     };
   </script>

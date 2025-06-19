@@ -5,11 +5,25 @@ const url = require('url');
 
 let nextId = 1;
 const queue = [];
+const history = [];
 const clients = [];
+
+function computeStats() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const entries = history.filter(e => e.createdAt >= today.getTime()).concat(queue);
+  const waits = history.filter(e => e.calledAt).map(e => e.calledAt - e.createdAt);
+  const avgWait = waits.length ? Math.round(waits.reduce((a, b) => a + b) / waits.length / 60000) : 0;
+  return { total: entries.length, avgWait };
+}
 
 function sendEvent(data) {
   const payload = `data: ${JSON.stringify(data)}\n\n`;
   clients.forEach(res => res.write(payload));
+}
+
+function sendUpdate() {
+  sendEvent({ type: 'update', queue, stats: computeStats() });
 }
 
 function serveStatic(req, res) {
@@ -34,7 +48,7 @@ function handleRegister(req, res) {
     const { name } = JSON.parse(body);
     const entry = { id: nextId++, name: name || '匿名', status: 'waiting', createdAt: Date.now() };
     queue.push(entry);
-    sendEvent({ type: 'update', queue });
+    sendUpdate();
     res.writeHead(200, {'Content-Type': 'application/json'});
     res.end(JSON.stringify(entry));
   });
@@ -46,7 +60,7 @@ function handleNext(req, res) {
     next.status = 'calling';
     next.calledAt = Date.now();
   }
-  sendEvent({ type: 'update', queue });
+  sendUpdate();
   res.writeHead(200);
   res.end();
 }
@@ -56,12 +70,14 @@ function handleDone(req, res) {
   req.on('data', chunk => body += chunk);
   req.on('end', () => {
     const { id } = JSON.parse(body);
-    const entry = queue.find(q => q.id === id);
-    if (entry) {
+    const idx = queue.findIndex(q => q.id === id);
+    if (idx !== -1) {
+      const [entry] = queue.splice(idx, 1);
       entry.status = 'done';
       entry.finishedAt = Date.now();
+      history.push(entry);
     }
-    sendEvent({ type: 'update', queue });
+    sendUpdate();
     res.writeHead(200);
     res.end();
   });
@@ -75,6 +91,7 @@ function handleSSE(req, res) {
   });
   res.write('\n');
   clients.push(res);
+  sendEvent({ type: 'update', queue, stats: computeStats() });
   req.on('close', () => {
     const idx = clients.indexOf(res);
     if (idx !== -1) clients.splice(idx, 1);
