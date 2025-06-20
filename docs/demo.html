@@ -5,15 +5,35 @@
   <title>受付＋管理（デモ）</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    body{display:flex;height:100vh;width:100vw}
+    body{display:flex;height:100vh;width:100vw;font-family:"Noto Sans JP",sans-serif}
     iframe{flex:1;border:none}
-    h1{position:absolute;top:8px;left:8px;font:14px/1 sans-serif;color:#555}
+    /* 点線の区切り */
+    .divider{
+      width:2px;background:
+        repeating-linear-gradient(
+          to bottom,
+          #aaa 0 8px,
+          transparent 8px 16px);
+    }
+    /* 画面上部のラベル */
+    .label{
+      position:fixed;top:8px;left:50%;transform:translateX(-50%);
+      font-size:14px;color:#555;background:#fff;padding:2px 8px;border-radius:6px;
+      box-shadow:0 1px 4px rgba(0,0,0,.1)
+    }
   </style>
 </head>
 <body>
-  <h1>← 受付画面 | 管理画面 →</h1>
-  <!-- 左 : 受付　右 : 管理 -->
-  <iframe src="index.html"></iframe>
-  <iframe src="admin.html"></iframe>
+  <!-- ラベル -->
+  <div class="label">← 左：受付画面 | 右：管理画面 →</div>
+
+  <!-- 左：受付 -->
+  <iframe src="index.html" title="受付画面"></iframe>
+
+  <!-- 点線仕切り -->
+  <div class="divider" aria-hidden="true"></div>
+
+  <!-- 右：管理 -->
+  <iframe src="admin.html" title="管理画面"></iframe>
 </body>
 </html>
