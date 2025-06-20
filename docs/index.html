@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>受付画面</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>受付画面</h1>
+
+  <!-- ★ 電話番号入力欄（SMS 用） -->
+  <label>
+    携帯番号（09012345678 形式）：
+    <input id="phone" type="tel" placeholder="09012345678">
+  </label>
+
+  <!-- 名前は任意 -->
+  <label>
+    名前（空欄で匿名）：
+    <input id="name">
+  </label>
+
+  <!-- ボタンは毎回押せる（ロックしない） -->
+  <button onclick="take()">順番を取る</button>
+
+  <p id="ticket"></p>
+  <p id="remain"></p>
+
+  <script>
+    /* 1. 順番を取る */
+    async function take() {
+      const name  = document.getElementById('name').value;
+      const phone = document.getElementById('phone').value;
+
+      const res  = await fetch('/take', {
+        method : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body   : JSON.stringify({ name, phone })
+      });
+      const data = await res.json();
+      document.getElementById('ticket').textContent =
+        `あなたの番号：${data.no}（${data.name}）`;
+      refreshRemain(data.no);   // 直後に残り組数を計算
+    }
+
+    /* 2. 残り組数を計算（自分の番号を引数で渡す） */
+    async function refreshRemain(myNo) {
+      if (!myNo) return;
+      const res   = await fetch('/status');
+      const queue = await res.json();
+      const ahead = queue.filter(t => t.no < myNo).length;
+      document.getElementById('remain').textContent =
+        `あと ${ahead} 組お待ちください`;
+    }
+  </script>
+</body>
+</html>
