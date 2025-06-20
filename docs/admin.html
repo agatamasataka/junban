@@ -2,24 +2,21 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>管理画面</title>
-
-  <!-- 追加：共通スタイル -->
+  <title>管理デモ（フロントのみ）</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>管理画面</h1>
+  <h1>管理画面（モック）</h1>
 
   <button onclick="next()">次を呼出</button>
   <ul id="list"></ul>
 
   <script>
-    /** 待ち行列を取得して一覧を更新 */
-    async function refresh() {
-      const res   = await fetch('/status');
-      const queue = await res.json();
-      const ul    = document.getElementById('list');
-      ul.innerHTML = '';
+    let queue = JSON.parse(localStorage.getItem('queue') || '[]');
+    function save() { localStorage.setItem('queue', JSON.stringify(queue)); }
+
+    function render(){
+      const ul = document.getElementById('list'); ul.innerHTML = '';
       queue.forEach(t => {
         const li = document.createElement('li');
         li.textContent = `番号 ${t.no} : ${t.name}`;
@@ -27,15 +24,23 @@
       });
     }
 
-    /** 「次を呼出」ボタン */
-    async function next() {
-      await fetch('/next', { method: 'POST' });
-      refresh();
+    function next(){
+      const finished = queue.shift();
+      if (finished) {
+        alert(`呼出し：番号 ${finished.no} の方`);
+        save(); render();
+      } else {
+        alert('待ち無し');
+      }
     }
 
-    /* 初回と 5 秒ごとの自動更新 */
-    refresh();
-    setInterval(refresh, 5000);
+    /* 受付側で変化しているかもしれないので 5 秒ごとに同期 */
+    setInterval(()=>{
+      queue = JSON.parse(localStorage.getItem('queue') || '[]');
+      render();
+    }, 5000);
+
+    render();
   </script>
 </body>
 </html>
