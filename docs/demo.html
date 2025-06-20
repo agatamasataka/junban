@@ -7,19 +7,20 @@
     *{margin:0;padding:0;box-sizing:border-box}
     body{display:flex;height:100vh;width:100vw;font-family:"Noto Sans JP",sans-serif}
     iframe{flex:1;border:none}
-    /* 点線の区切り */
+
+    /* 点線の区切り ― クリックを邪魔しない */
     .divider{
-      width:2px;background:
-        repeating-linear-gradient(
-          to bottom,
-          #aaa 0 8px,
-          transparent 8px 16px);
+      width:2px;
+      background:repeating-linear-gradient(to bottom,#aaa 0 8px,transparent 8px 16px);
+      pointer-events:none;
     }
-    /* 画面上部のラベル */
+
+    /* 画面上部のラベル ― クリックを邪魔しない */
     .label{
       position:fixed;top:8px;left:50%;transform:translateX(-50%);
       font-size:14px;color:#555;background:#fff;padding:2px 8px;border-radius:6px;
-      box-shadow:0 1px 4px rgba(0,0,0,.1)
+      box-shadow:0 1px 4px rgba(0,0,0,.1);
+      pointer-events:none;
     }
   </style>
 </head>
