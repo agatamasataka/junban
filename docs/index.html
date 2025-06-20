@@ -2,11 +2,12 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>受付デモ（フロントのみ）</title>
+  <title>ロカオプ順番待ちシステム</title>
   <link rel="stylesheet" href="style.css">
+  <style>h1{text-align:center;margin-bottom:1.5rem}</style>
 </head>
 <body>
-  <h1>受付画面（モック）</h1>
+  <h1>ロカオプ順番待ちシステム</h1>
 
   <label>携帯番号（09012345678 形式）：
     <input id="phone" placeholder="09012345678">
@@ -21,23 +22,29 @@
   <p id="ticket"></p>
   <p id="remain"></p>
 
-  <script>
-    /* 待ち行列をブラウザ内だけで保持 */
-    let queue = JSON.parse(localStorage.getItem('queue') || '[]');
-    let myNo  = null;
+  <p style="margin-top:2rem;font-size:0.85rem;color:#666">
+    ※携帯電話を入力すると、近くの順番になったら<br>
+    ショートメッセージで呼び出しできます。
+  </p>
 
-    /* 保存ヘルパー */
-    function save() {
-      localStorage.setItem('queue', JSON.stringify(queue));
+  <script>
+    /* ローカル保存ヘルパー */
+    function loadQueue(){
+      return JSON.parse(localStorage.getItem('queue') || '[]');
+    }
+    function saveQueue(q){
+      localStorage.setItem('queue', JSON.stringify(q));
     }
 
-    /* 1. 順番を取る */
-    function take() {
+    let myNo = null;
+
+    /* 1. 順番を取る（ローカルだけで完結） */
+    function take(){
+      const queue = loadQueue();
       const name  = document.getElementById('name').value || '匿名';
       const phone = document.getElementById('phone').value;
-      const no    = queue.length ? queue[queue.length - 1].no + 1 : 1;
-      queue.push({ no, name, phone });
-      save();
+      const no    = queue.length ? queue[queue.length-1].no + 1 : 1;
+      queue.push({ no, name, phone });  saveQueue(queue);
 
       myNo = no;
       document.getElementById('ticket').textContent =
@@ -45,16 +52,17 @@
       refreshRemain();
     }
 
-    /* 2. 残り組数を計算 */
-    function refreshRemain() {
-      if (myNo === null) return;
+    /* 2. 残り組数を最新データで計算 */
+    function refreshRemain(){
+      if(myNo === null) return;
+      const queue = loadQueue();                // ★ ここで毎回読み直す
       const ahead = queue.filter(t => t.no < myNo).length;
       document.getElementById('remain').textContent =
         `あと ${ahead} 組お待ちください`;
     }
 
-    /* ページ読み込み時に初期化 */
-    setInterval(refreshRemain, 5000);  // 5 秒ごとに更新
+    /* 5 秒ごとに残り組数を更新 */
+    setInterval(refreshRemain, 5000);
   </script>
 </body>
 </html>

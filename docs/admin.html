@@ -2,44 +2,39 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>管理デモ（フロントのみ）</title>
+  <title>ロカオプ順番待ちシステム（管理）</title>
   <link rel="stylesheet" href="style.css">
+  <style>h1{text-align:center;margin-bottom:1.5rem}</style>
 </head>
 <body>
-  <h1>管理画面（モック）</h1>
+  <!-- 中央タイトル -->
+  <h1>ロカオプ順番待ちシステム</h1>
 
   <button onclick="next()">次を呼出</button>
   <ul id="list"></ul>
 
-  <script>
-    let queue = JSON.parse(localStorage.getItem('queue') || '[]');
-    function save() { localStorage.setItem('queue', JSON.stringify(queue)); }
+  <!-- 注意書き -->
+  <p style="margin-top:2rem;font-size:0.85rem;color:#666">
+    ※組数の待ち時間計算ロジックを組むことができます。
+  </p>
 
+  <script>
+    let queue=JSON.parse(localStorage.getItem('queue')||'[]');
+    function save(){localStorage.setItem('queue',JSON.stringify(queue));}
     function render(){
-      const ul = document.getElementById('list'); ul.innerHTML = '';
-      queue.forEach(t => {
-        const li = document.createElement('li');
-        li.textContent = `番号 ${t.no} : ${t.name}`;
+      const ul=document.getElementById('list'); ul.innerHTML='';
+      queue.forEach(t=>{
+        const li=document.createElement('li');
+        li.textContent=`番号 ${t.no} : ${t.name}`;
         ul.appendChild(li);
       });
     }
-
     function next(){
-      const finished = queue.shift();
-      if (finished) {
-        alert(`呼出し：番号 ${finished.no} の方`);
-        save(); render();
-      } else {
-        alert('待ち無し');
-      }
+      const finished=queue.shift();
+      if(finished){alert(`呼出し：番号 ${finished.no} の方`); save(); render();}
+      else alert('待ち無し');
     }
-
-    /* 受付側で変化しているかもしれないので 5 秒ごとに同期 */
-    setInterval(()=>{
-      queue = JSON.parse(localStorage.getItem('queue') || '[]');
-      render();
-    }, 5000);
-
+    setInterval(()=>{queue=JSON.parse(localStorage.getItem('queue')||'[]');render();},5000);
     render();
   </script>
 </body>
