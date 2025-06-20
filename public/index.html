@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>受付画面</title>
+</head>
+<body>
+  <h1>受付画面</h1>
+
+  <!-- 名前入力（空欄なら匿名として受付） -->
+  <label>
+    名前（空欄で匿名）：
+    <input id="name" />
+  </label>
+  <button onclick="take()">順番を取る</button>
+
+  <!-- 受付番号の表示場所 -->
+  <p id="result"></p>
+
+  <script>
+    // 「順番を取る」ボタンを押したときに実行
+    async function take() {
+      const name = document.getElementById('name').value;  // 入力値
+      const res  = await fetch('/take', {                  // サーバーへPOST
+        method : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body   : JSON.stringify({ name })
+      });
+      const data = await res.json();                       // 返ってきた番号
+      document.getElementById('result').textContent =
+        `あなたの番号：${data.no}（${data.name}）`;
+    }
+  </script>
+</body>
+</html>

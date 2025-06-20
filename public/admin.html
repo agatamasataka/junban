@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>管理画面</title>
+</head>
+<body>
+  <h1>管理画面</h1>
+
+  <button onclick="next()">次を呼出</button>
+  <ul id="list"></ul>
+
+  <script>
+    /** 待ち行列を取得して一覧を更新 */
+    async function refresh() {
+      const res = await fetch('/status');
+      const queue = await res.json();
+      const ul = document.getElementById('list');
+      ul.innerHTML = '';
+      queue.forEach(t => {
+        const li = document.createElement('li');
+        li.textContent = `番号 ${t.no} : ${t.name}`;
+        ul.appendChild(li);
+      });
+    }
+
+    /** 「次を呼出」ボタン */
+    async function next() {
+      await fetch('/next', { method: 'POST' });
+      refresh();
+    }
+
+    // 初回と 5 秒ごとの自動更新
+    refresh();
+    setInterval(refresh, 5000);
+  </script>
+</body>
+</html>
